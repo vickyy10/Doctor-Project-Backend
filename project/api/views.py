@@ -27,9 +27,9 @@ class UserRegistrationView(viewsets.ViewSet):
             is_doctor=serializer.validated_data['is_doctor'],
 
                 )
-            return Response({"msg":"user created","user datails":serializer.data})
+            return Response({"msg":"user created","user datails":serializer.data},status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors)
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         
 
 # ----------------- USER LOGIN ------------------------

@@ -21,13 +21,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
         if any(i in chr for i in name):
-            raise serializers.ValidationError('remove special character ')
+            raise serializers.ValidationError('remove special character from name')
         
 
         
         if password != confirmpassword:
 
-            raise serializers.ValidationError('password doesot match')
+            raise serializers.ValidationError('password does not match')
         
         return data
     
