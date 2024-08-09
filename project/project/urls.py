@@ -17,11 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from rest_framework.routers import  DefaultRouter
-from api.views import UserRegistrationView,UserHomeView,UserProfileView,UserLogin
+from api.views import UserRegistrationView,UserHomeView,UserProfileView,DoctorHomeView
+from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
+from api.views import MyTokenObtainPairView
+from django.conf.urls.static import static
+from django.conf import settings
 
 router=DefaultRouter()
 router.register(r'UserRegistration',UserRegistrationView,basename='UserRegistration')
 router.register(r'UserProfile',UserProfileView,basename='UserProfile')
+router.register(r'DoctorHome',DoctorHomeView,basename='DoctorHome')
 
 
 
@@ -29,7 +34,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include(router.urls)),
     path('userhome/',UserHomeView.as_view(),name='userhome'),
-    path('userlogin/',UserLogin.as_view(),name='userlogin')
-
+     path('Login/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+

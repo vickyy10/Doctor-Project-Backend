@@ -2,11 +2,23 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.response import Response
 from .models import User,Doctor
-from .serializer import UserRegistrationSerializer,UserSerializer,DoctorSerializer,UserloginSerializer
+from .serializer import UserRegistrationSerializer,UserSerializer,DoctorSerializer,MyTokenObtainPairSerializer
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.decorators import authentication_classes
+
 
 # Create your views here.
+
+# =============TOKEN CUSTOMISATION===============
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class=MyTokenObtainPairSerializer
+
+
+
 
 # -------------- USER REGISTRATION ---------------------
 
@@ -15,17 +27,22 @@ from rest_framework import viewsets
 class UserRegistrationView(viewsets.ViewSet):
 
     def create(self,request):
-        print(request.data)
         serializer=UserRegistrationSerializer(data=request.data)
 
         if serializer.is_valid():
 
-            User.objects.create(
+            user=User.objects.create_user(
             name = serializer.validated_data['name'],
             email = serializer.validated_data['email'],
             password = serializer.validated_data['password'],
             is_doctor=serializer.validated_data['is_doctor'],
 
+                )
+            if user.is_doctor:
+                Doctor.objects.create(
+                    user=user,
+                    name=serializer.validated_data['name'],
+                    email=serializer.validated_data['email']
                 )
             return Response({"msg":"user created","user datails":serializer.data},status=status.HTTP_201_CREATED)
         else:
@@ -34,16 +51,16 @@ class UserRegistrationView(viewsets.ViewSet):
 
 # ----------------- USER LOGIN ------------------------
 
-class UserLogin(APIView):
+# class UserLogin(APIView):
 
-    def post(self,request):
-        data=request.data 
-        serializer=UserloginSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"msg":"user logined"})
-        else:
-            return Response(serializer.errors)
+#     def post(self,request):
+#         data=request.data 
+#         serializer=UserloginSerializer(data=data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response({"msg":"user logined"})
+#         else:
+#             return Response(serializer.errors)
         
 
 # ----------------------------- USER --------------------------------------
@@ -52,55 +69,82 @@ class UserLogin(APIView):
 # see details of doctors
 # crud user details
 
+from rest_framework.permissions import IsAuthenticated
 
+# @authentication_classes([IsAuthenticated])
 
 class UserHomeView(APIView):
-
     def get(self,request):
         data=Doctor.objects.all()
-        if data:
-            serializer=UserSerializer(data,many=True)
-            return Response(serializer.data)
-        return Response({"msg":"no doctor available"})
+        serializer=DoctorSerializer(data,many=True)
+        return Response(serializer.data)
+    
 
 
 # =======USER PROFILE EDIT===========
 
 from rest_framework import viewsets
-from rest_framework.mixins import UpdateModelMixin,RetrieveModelMixin,DestroyModelMixin  
+  
+class UserProfileView(viewsets.ViewSet):
 
-class UserProfileView(viewsets.GenericViewSet,UpdateModelMixin,RetrieveModelMixin,DestroyModelMixin):
+    def retrieve(self,req,pk=None):
+        id=pk
+        if pk is not None:
+            data=User.objects.get(id=id)
+            serializer=UserSerializer(data)
+            return Response(serializer.data)
+        
+    def partial_update(self,request,pk=None):
+        if pk is not None:
+            data=User.objects.get(id=pk)
+            serializer=UserSerializer(data,data=request.data,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+        
 
-    queryset=User.objects.all()
-    serializer_class=UserSerializer
 
 
 # ------------------------- DOCTOR --------------------
 
 class DoctorHomeView(viewsets.ViewSet):
 
-    def retrive(self,request,pk=None):
+    def retrieve(self,request,pk=None):
         if pk is not None:
-            data=Doctor.objects.get(id=pk)
+            print(request.data)
+            data=Doctor.objects.get(user=pk)
             serializer=DoctorSerializer(data)
             return Response(serializer.data)
 
 
+    def partial_update(self,request,pk=None):
+        if pk is not None:
+            doctor=Doctor.objects.get(user=pk)
+            serializer=DoctorSerializer(doctor,data=request.data,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                User.objects.filter(id=pk).update(
+                        name=request.data.get('name'),
+                        email=request.data.get('email')
+                    )
+                print(doctor.user.name,'data')
+                return Response(serializer.data)
+
 
 #============== DOCTOR PROFILE EDIT========
  
-class DoctorProfileView(viewsets.GenericViewSet,UpdateModelMixin,RetrieveModelMixin):
+# class DoctorProfileView(viewsets.GenericViewSet,UpdateModelMixin,RetrieveModelMixin):
 
-    queryset=User.objects.all()
-    serializer_class=UserSerializer
+#     queryset=User.objects.all()
+#     serializer_class=UserSerializer
 
 
 # ============ ADMIN ===========
 
-class AdminProfileView(viewsets.GenericViewSet,UpdateModelMixin,RetrieveModelMixin):
+# class AdminProfileView(viewsets.GenericViewSet,UpdateModelMixin,RetrieveModelMixin):
 
-    queryset=User.objects.all()
-    serializer_class=UserSerializer
+#     queryset=User.objects.all()
+#     serializer_class=UserSerializer
 
 
 
