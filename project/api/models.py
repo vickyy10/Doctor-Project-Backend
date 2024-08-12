@@ -41,21 +41,21 @@ class User(AbstractBaseUser):
     USERNAME_FIELD ='email'
 
     
-    # def has_perm(self, perm, obj=None):
-    #     "Does the user have a specific permission?"
-    #     # Simplest possible answer: Yes, always
-    #     return True
+    def has_perm(self, perm, obj=None):
+        "Does the user have a specific permission?"
+        # Simplest possible answer: Yes, always
+        return True
 
-    # def has_module_perms(self, app_label):
-    #     "Does the user have permissions to view the app `app_label`?"
-    #     # Simplest possible answer: Yes, always
-    #     return True
+    def has_module_perms(self, app_label):
+        "Does the user have permissions to view the app `app_label`?"
+        # Simplest possible answer: Yes, always
+        return True
 
-    # @property
-    # def is_staff(self):
-    #     "Is the user a member of staff?"
-    #     # Simplest possible answer: All admins are staff
-    #     return self.is_admin
+    @property
+    def is_staff(self):
+        "Is the user a member of staff?"
+        # Simplest possible answer: All admins are staff
+        return self.is_admin
 
 
 
@@ -65,15 +65,11 @@ class Doctor(models.Model):
     name=models.CharField(max_length=20,null=True,blank=True)
     email=models.EmailField(null=True,blank=True)
     hospital=models.CharField(max_length=100,null=True,blank=True)
-    departmet=models.CharField(max_length=100,null=True,blank=True)
+    department=models.CharField(max_length=100,null=True,blank=True)
     image=models.ImageField(upload_to='media/doctor',null=True,blank=True)
 
-    # def update_user_info(self, name=None, email=None):
-    #     if name:
-    #         self.user.name = name
-    #     if email:
-    #         self.user.email = email
-    #     self.user.save()
+
+
 
     
     

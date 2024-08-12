@@ -6,8 +6,9 @@ from .serializer import UserRegistrationSerializer,UserSerializer,DoctorSerializ
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.decorators import authentication_classes
-
+from rest_framework.decorators import authentication_classes,permission_classes
+from rest_framework.permissions import IsAuthenticated,IsAdminUser
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 # Create your views here.
 
@@ -49,19 +50,6 @@ class UserRegistrationView(viewsets.ViewSet):
             return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         
 
-# ----------------- USER LOGIN ------------------------
-
-# class UserLogin(APIView):
-
-#     def post(self,request):
-#         data=request.data 
-#         serializer=UserloginSerializer(data=data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({"msg":"user logined"})
-#         else:
-#             return Response(serializer.errors)
-        
 
 # ----------------------------- USER --------------------------------------
 
@@ -69,10 +57,10 @@ class UserRegistrationView(viewsets.ViewSet):
 # see details of doctors
 # crud user details
 
-from rest_framework.permissions import IsAuthenticated
 
-# @authentication_classes([IsAuthenticated])
 
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 class UserHomeView(APIView):
     def get(self,request):
         data=Doctor.objects.all()
@@ -84,8 +72,11 @@ class UserHomeView(APIView):
 # =======USER PROFILE EDIT===========
 
 from rest_framework import viewsets
+
   
 class UserProfileView(viewsets.ViewSet):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self,req,pk=None):
         id=pk
@@ -108,6 +99,8 @@ class UserProfileView(viewsets.ViewSet):
 # ------------------------- DOCTOR --------------------
 
 class DoctorHomeView(viewsets.ViewSet):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self,request,pk=None):
         if pk is not None:
@@ -131,38 +124,37 @@ class DoctorHomeView(viewsets.ViewSet):
                 return Response(serializer.data)
 
 
-#============== DOCTOR PROFILE EDIT========
- 
-# class DoctorProfileView(viewsets.GenericViewSet,UpdateModelMixin,RetrieveModelMixin):
-
-#     queryset=User.objects.all()
-#     serializer_class=UserSerializer
 
 
-# ============ ADMIN ===========
-
-# class AdminProfileView(viewsets.GenericViewSet,UpdateModelMixin,RetrieveModelMixin):
-
-#     queryset=User.objects.all()
-#     serializer_class=UserSerializer
-
-
+# -------------ADMIN ------------
 
 class AdminUserView(APIView):
-
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAdminUser]
+   
     def get(self,request):
-        data=User.objects.all()
-        serializer=UserSerializer(data)
+        data=User.objects.filter(is_admin=False)
+        serializer=UserSerializer(data,many=True)
         return Response(serializer.data)
-
-
+    
+    def patch(self,request,pk=None):
+        if pk is not None:
+            user=User.objects.get(id=pk)
+            serializer=UserSerializer(user,data=request.data,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+        
 
 class AdminDoctorView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAdminUser]
      
-     def get(self,request):
+    def get(self,request):
         data=Doctor.objects.all()
-        serializer=DoctorSerializer(data)
+        serializer=DoctorSerializer(data,many=True)
         return Response(serializer.data)
+    
      
 
 

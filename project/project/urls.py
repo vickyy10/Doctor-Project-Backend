@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from rest_framework.routers import  DefaultRouter
-from api.views import UserRegistrationView,UserHomeView,UserProfileView,DoctorHomeView
+from api.views import UserRegistrationView,UserHomeView,UserProfileView,DoctorHomeView,AdminUserView,AdminDoctorView
 from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
 from api.views import MyTokenObtainPairView
 from django.conf.urls.static import static
@@ -36,6 +36,9 @@ urlpatterns = [
     path('userhome/',UserHomeView.as_view(),name='userhome'),
      path('Login/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/users/',AdminUserView.as_view(),name='users'),
+    path('api/users/<int:pk>/',AdminUserView.as_view(),name='usersblock'),
+    path('api/doctors/',AdminDoctorView.as_view(),name='doctors'),
 
 ]
 

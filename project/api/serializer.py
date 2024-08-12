@@ -47,32 +47,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 
-
-
-
-
-
-# class UserloginSerializer(serializers.Serializer):
-#     Lemail=serializers.EmailField()
-#     Lpassword=serializers.CharField()
-
-#     def validate(self,data):
-#         try:
-#             obj=User.objects.get(email=data['Lemail'])
-#             if obj:
-#                 print(obj)
-#                 if data['Lpassword'] == obj.password:
-#                     raise serializers.ValidationError("password and username matched")
-#                 else:
-#                     raise serializers.ValidationError("password deos not match")
-#         except User.DoesNotExist:
-#             raise serializers.ValidationError("email does not exist.")
-
-        
-        
-
-
-
 class UserSerializer(serializers.ModelSerializer):
 
 
