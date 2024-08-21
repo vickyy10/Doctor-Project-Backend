@@ -2,12 +2,13 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.response import Response
 from .models import User,Doctor
+from django.db.models import Q
 from .serializer import UserRegistrationSerializer,UserSerializer,DoctorSerializer,MyTokenObtainPairSerializer
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import authentication_classes,permission_classes
-from rest_framework.permissions import IsAuthenticated,IsAdminUser
+from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 # Create your views here.
@@ -25,7 +26,9 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 from rest_framework import viewsets
 
+
 class UserRegistrationView(viewsets.ViewSet):
+    permission_classes=[AllowAny]
 
     def create(self,request):
         serializer=UserRegistrationSerializer(data=request.data)
@@ -74,49 +77,48 @@ class UserHomeView(APIView):
 from rest_framework import viewsets
 
   
-class UserProfileView(viewsets.ViewSet):
+class UserProfileView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def retrieve(self,req,pk=None):
-        id=pk
-        if pk is not None:
-            data=User.objects.get(id=id)
+    def get(self,req):
+            print(req.user)
+            data=User.objects.get(name=req.user)
             serializer=UserSerializer(data)
             return Response(serializer.data)
         
-    def partial_update(self,request,pk=None):
-        if pk is not None:
-            data=User.objects.get(id=pk)
+    def patch(self,request):
+            data=User.objects.get(name=request.user)
             serializer=UserSerializer(data,data=request.data,partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
+            return 
         
 
 
 
 # ------------------------- DOCTOR --------------------
 
-class DoctorHomeView(viewsets.ViewSet):
+class DoctorHomeView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def retrieve(self,request,pk=None):
-        if pk is not None:
-            print(request.data)
-            data=Doctor.objects.get(user=pk)
-            serializer=DoctorSerializer(data)
-            return Response(serializer.data)
+    def get(self,request):
+        user=request.user
+        data=Doctor.objects.get(name=user)
+        serializer=DoctorSerializer(data)
+        return Response(serializer.data)
 
 
-    def partial_update(self,request,pk=None):
-        if pk is not None:
-            doctor=Doctor.objects.get(user=pk)
+    def patch(self,request):
+            print(request.user,'dataa')
+            doctor=Doctor.objects.get(name=request.user)
             serializer=DoctorSerializer(doctor,data=request.data,partial=True)
             if serializer.is_valid():
+
                 serializer.save()
-                User.objects.filter(id=pk).update(
+                User.objects.filter(name=request.user).update(
                         name=request.data.get('name'),
                         email=request.data.get('email')
                     )
@@ -133,13 +135,14 @@ class AdminUserView(APIView):
     permission_classes = [IsAdminUser]
    
     def get(self,request):
-        data=User.objects.filter(is_admin=False)
+        data=User.objects.exclude(Q(is_admin=True) | Q(is_doctor=True) )
         serializer=UserSerializer(data,many=True)
         return Response(serializer.data)
     
     def patch(self,request,pk=None):
         if pk is not None:
-            user=User.objects.get(id=pk)
+            print(request.data)
+            user=User.objects.get(email=request.data['email'])
             serializer=UserSerializer(user,data=request.data,partial=True)
             if serializer.is_valid():
                 serializer.save()
@@ -155,6 +158,19 @@ class AdminDoctorView(APIView):
         serializer=DoctorSerializer(data,many=True)
         return Response(serializer.data)
     
+
+    def patch(self,request,pk=None):
+        if pk is not None:
+            print(request.data)
+            user=User.objects.get(email=request.data['email'])
+            serializer=UserSerializer(user,data=request.data,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                doctor=Doctor.objects.get(email=request.data['email'])
+                serializer1=DoctorSerializer(doctor,data=request.data,partial=True)
+                if serializer1.is_valid():
+                    serializer1.save()
+                    return Response(serializer1.data)
      
 
 

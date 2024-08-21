@@ -29,12 +29,15 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
 
-    name=models.CharField(max_length=200)
+    name=models.CharField(max_length=200,null=True,blank=True)
     email=models.EmailField(unique=True)
     password=models.CharField(max_length=200)
     is_doctor=models.BooleanField(default=False)
     is_active=models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
 
 
     objects = UserManager()
@@ -67,7 +70,11 @@ class Doctor(models.Model):
     hospital=models.CharField(max_length=100,null=True,blank=True)
     department=models.CharField(max_length=100,null=True,blank=True)
     image=models.ImageField(upload_to='media/doctor',null=True,blank=True)
+    is_active=models.BooleanField(default=True)
+    
+    def __str__(self):
 
+        return self.name
 
 
 
