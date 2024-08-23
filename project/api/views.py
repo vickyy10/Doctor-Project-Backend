@@ -10,6 +10,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import authentication_classes,permission_classes
 from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework import status
 
 # Create your views here.
 
@@ -112,18 +113,20 @@ class DoctorHomeView(APIView):
 
 
     def patch(self,request):
-            print(request.user,'dataa')
+            print(request.data,'dataa')
             doctor=Doctor.objects.get(name=request.user)
             serializer=DoctorSerializer(doctor,data=request.data,partial=True)
             if serializer.is_valid():
-
+                print(serializer.validated_data)
                 serializer.save()
                 User.objects.filter(name=request.user).update(
                         name=request.data.get('name'),
                         email=request.data.get('email')
                     )
-                print(doctor.user.name,'data')
                 return Response(serializer.data)
+            else:
+                return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
